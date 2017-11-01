@@ -49,14 +49,18 @@
         >
           下一步
         </button>
+        <FormFooter step="step1" />
       </form>
     </div>
+    <Popup @clearMessage="clearMessage" />
   </div>
 </template>
 
 <script>
 import TopBanner from '@/components/TopBanner'
 import FormHeaderStep1 from '@/components/FormHeaderStep1'
+import FormFooter from '@/components/FormFooter'
+import Popup from '@/components/Popup'
 
 export default {
   name: 'step1',
@@ -67,7 +71,8 @@ export default {
       code: sessionStorage.getItem('code') || '',
       disableSendCode: false,
       timer: false,
-      vCode: ''
+      vCode: '',
+      message: ''
     }
   },
   computed: {
@@ -87,9 +92,16 @@ export default {
       return this.$route.query.inviter
     }
   },
+  methods: {
+    clearMessage () {
+      this.messgae = ''
+    }
+  },
   components: {
     TopBanner,
-    FormHeaderStep1
+    FormHeaderStep1,
+    FormFooter,
+    Popup
   },
   updated () {
     console.log(this.template)

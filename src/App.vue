@@ -16,6 +16,9 @@ export default {
 @import "./style/animate";
 
 .views{
+  a, a:visited{
+    color: @dark-fawn;
+  }
 }
 </style>
 
