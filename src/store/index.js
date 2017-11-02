@@ -2,8 +2,6 @@ import Vue from 'vue'
 
 export default new Vue({
   data: {
-    template: '',
-    inviter: '',
     baseUrl: ''
   },
   created () {

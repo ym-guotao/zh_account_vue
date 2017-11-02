@@ -1,7 +1,7 @@
 <template>
   <div class="step1">
     <TopBanner
-      :template="this.template"
+      :template="template"
       :inviter="{
         name: 'test', 
         company: 'company', 
@@ -13,12 +13,15 @@
       <h4 class="form-header"> 
         <span class="line">&nbsp;</span>
         <FormHeaderStep1
-          :template="this.template"
+          :template="template"
         />
       </h4>
       <form class="register-form">
         <div class="selecter-wrapper form-item">
-          <select class="block country-list select" @change="onCountrySelectorChange" v-model="dcc">
+          <select 
+            class="block country-list select" 
+            v-model="dcc"
+          >
             <option 
               v-for="country in countryArr" 
               :key="country.key" 
@@ -35,6 +38,7 @@
             class="block input" 
             placeholder="请输入手机号" 
             v-model.trim="mobile"
+            @input="onMobileChange"
           />
         </div>
         <div class="input-wrapper form-item">
@@ -45,21 +49,28 @@
             class="block input" 
             placeholder="请输入4位验证码"
             v-model.trim="code"
+            @input="onCodeChange"
           />
           <span>
             <em 
               :class="sendClass"
-              :style="{display: sendDisplay}"
+              v-if="!this.showTimer"
               @click="() => beforeSubmit(onSendCode)"
             >
               发送验证码
             </em>
+            <Timer 
+              :seconds="30"
+              @clearTimer="clearTimer"
+              v-if="this.showTimer"
+            />
           </span>
         </div>
         <button 
           type="submit" 
           class="block step1-submit button"
           :disabled="btnNotAvailable"
+          @click="(event) => onSubmit(event)"
         >
           下一步
         </button>
@@ -79,6 +90,7 @@ import TopBanner from '@/components/TopBanner'
 import FormHeaderStep1 from '@/components/FormHeaderStep1'
 import FormFooter from '@/components/FormFooter'
 import Popup from '@/components/Popup'
+import Timer from '@/components/Timer'
 import {send} from '@/lib/http'
 import store from '@/store'
 import getQuery from '@/mixins/getQuery'
@@ -94,7 +106,7 @@ export default {
       mobile: sessionStorage.getItem('mobile') || '',
       code: sessionStorage.getItem('code') || '',
       disableSendCode: false,
-      timer: false,
+      showTimer: false,
       vCode: '',
       message: '',
       countryArr: [{key: 'country_207', value: '0086', value2: '中国'}]
@@ -104,9 +116,6 @@ export default {
   computed: {
     sendClass () {
       return this.disableSendCode ? 'send-v-code' : 'send-v-code green'
-    },
-    sendDisplay () {
-      return this.timer ? 'none' : ''
     },
     btnNotAvailable () {
       return this.code.length !== 4
@@ -119,10 +128,23 @@ export default {
         return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
       }).join('&')
     },
+
+    onMobileChange () {
+      sessionStorage.setItem('mobile', this.mobile)
+    },
+
+    onCodeChange () {
+      sessionStorage.setItem('code', this.code)
+    },
+
     clearMessage () {
-      console.log('clearMessage')
       this.message = ''
     },
+
+    clearTimer () {
+      this.showTimer = false
+    },
+
     // 合法性检测之后调用 next
     beforeSubmit (next, e) {
       if (this.dcc === '0086' && !(/^1\d{10}$/).test(this.mobile)) {
@@ -135,19 +157,62 @@ export default {
       }
       next()
     },
-    onCountrySelectorChange () {
-      console.log(this.dcc)
-    },
+
     onSendCode () {
-      const that = this
       send(`${store.baseUrl}/wz/account/mobile/check`, {
-        params: {
-          dcc: that.dcc,
-          mobile: that.mobile
-        }
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: this._encodeParams({
+          dcc: this.dcc,
+          mobile: this.mobile
+        })
       })
         .then(response => {
-          console.log(response)
+          this.showTimer = true
+        })
+    },
+
+    onSubmit (event) {
+      event.preventDefault()
+      send(`${store.baseUrl}/wz/account/submit`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: this._encodeParams({
+          dcc: this.dcc,
+          mobile: this.mobile,
+          code: this.code
+        })
+      })
+        .then(response => {
+          const {code, message, data} = response
+          if (code < 0) {
+            this.message = message
+          }
+          if (code === 1) {
+            console.log(this.redir)
+            if (this.redir) {
+              let tmp = decodeURIComponent(this.redir)
+              tmp = /\?/.test(tmp) ? tmp + '&' : tmp + '?'
+              window.location.href = tmp + data
+            }
+            // 否则根据环境进行跳转
+            switch (window.location.hostname) {
+              case 'pre.m.zhsland.com':
+                window.location.href = 'http://pre.m.zhsland.com/wz/app/download'
+                break
+              case 'm.zhisland.com':
+                window.location.href = 'http://m.zhisland.com/wz/app/download'
+                break
+              default:
+                window.location.href = 'http://test.m.zhisland.com/wz/app/download'
+            }
+          }
+          // 成功 (code === 0)后跳转路由
+          const query = this.$route.query
+          this.$router.push({
+            path: '/step2',
+            query
+          })
         })
     }
   },
@@ -156,7 +221,8 @@ export default {
     TopBanner,
     FormHeaderStep1,
     FormFooter,
-    Popup
+    Popup,
+    Timer
   },
 
   mounted () {
@@ -164,10 +230,6 @@ export default {
       .then(response => {
         this.countryArr = Object.values(response)
       })
-  },
-
-  updated () {
-    console.log('mobile: ', this.mobile, 'dcc: ', this.dcc, 'code: ', this.code)
   }
 }
 </script>
