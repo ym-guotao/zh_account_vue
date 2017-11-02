@@ -59,7 +59,6 @@ export default {
 .message-box.active{
   opacity:1;
   display: table;
-  
 }
 .bg-dark{
   background-color: @black-30;

@@ -17,6 +17,7 @@
     "axios": "^0.17.0",
     "lodash": "^4.17.4",
     "mint-ui": "^2.2.9",
+    "node-fetch": "^1.7.3",
     "query-string": "^5.0.1",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",

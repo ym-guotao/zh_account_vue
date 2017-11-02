@@ -5,7 +5,7 @@ import { Indicator } from 'mint-ui'
 let config = {}
 if (process.env.NODE_ENV === 'development' && !process.env.VUE_APP_SERVER_URL) {
   // 请在此处添加您的应用的 API server url
-  config.baseURL = ''
+  config.baseURL = 'http://test.m.zhisland.com'
 } else if (process.env.VUE_APP_SERVER_URL) {
   config.baseURL = process.env.VUE_APP_SERVER_URL
 }
@@ -61,6 +61,32 @@ instance.lock = function () {
   return lockHttp
 }
 
+// simple fetch interceptor
+const send = (url, options) => {
+  Indicator.open()
+  return Promise.resolve({
+    then: (onFulfill, onReject) => {
+      fetch(url, options)
+        .then(response => {
+          if (response.status !== 200) {
+            throw new Error('Fail to get response with status ' + response.status)
+          }
+          response.json()
+            .then(responseJSON => {
+              onFulfill(responseJSON)
+            })
+            .catch(parseJSONerror => {
+              throw new Error(parseJSONerror)
+            })
+          Indicator.close()
+        })
+        .catch(error => {
+          throw new Error(error)
+        })
+    }
+  })
+}
+
 export default instance
 
-export {lockHttp}
+export {lockHttp, send}

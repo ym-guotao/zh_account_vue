@@ -18,11 +18,24 @@
       </h4>
       <form class="register-form">
         <div class="selecter-wrapper form-item">
-          <select class="block country-list select">
+          <select class="block country-list select" @change="onCountrySelectorChange" v-model="dcc">
+            <option 
+              v-for="country in countryArr" 
+              :key="country.key" 
+              :value="country.value"
+            >
+              {{country.value2}}
+            </option>
           </select>
         </div>
         <div class="form-item">
-          <input type="number" pattern="[0-9]*"  class="block input" placeholder="请输入手机号" />
+          <input 
+            type="number" 
+            pattern="[0-9]*"  
+            class="block input" 
+            placeholder="请输入手机号" 
+            v-model.trim="mobile"
+          />
         </div>
         <div class="input-wrapper form-item">
           <input 
@@ -31,12 +44,13 @@
             pattern="[0-9]*" 
             class="block input" 
             placeholder="请输入4位验证码"
-            v-model.trim="vCode"
+            v-model.trim="code"
           />
           <span>
             <em 
               :class="sendClass"
               :style="{display: sendDisplay}"
+              @click="() => beforeSubmit(onSendCode)"
             >
               发送验证码
             </em>
@@ -45,25 +59,35 @@
         <button 
           type="submit" 
           class="block step1-submit button"
-          :disabled="btnAvailable"
+          :disabled="btnNotAvailable"
         >
           下一步
         </button>
         <FormFooter step="step1" />
       </form>
     </div>
-    <Popup @clearMessage="clearMessage" />
+    <Popup 
+      @clearMessage="clearMessage"
+      :message="message"
+    />
   </div>
 </template>
 
 <script>
+// import fetch from 'node-fetch'
 import TopBanner from '@/components/TopBanner'
 import FormHeaderStep1 from '@/components/FormHeaderStep1'
 import FormFooter from '@/components/FormFooter'
 import Popup from '@/components/Popup'
+import {send} from '@/lib/http'
+import store from '@/store'
+import getQuery from '@/mixins/getQuery'
 
 export default {
   name: 'step1',
+
+  mixins: [getQuery],
+
   data () {
     return {
       dcc: sessionStorage.getItem('dcc') || '0086',
@@ -72,9 +96,11 @@ export default {
       disableSendCode: false,
       timer: false,
       vCode: '',
-      message: ''
+      message: '',
+      countryArr: [{key: 'country_207', value: '0086', value2: '中国'}]
     }
   },
+
   computed: {
     sendClass () {
       return this.disableSendCode ? 'send-v-code' : 'send-v-code green'
@@ -82,35 +108,73 @@ export default {
     sendDisplay () {
       return this.timer ? 'none' : ''
     },
-    btnAvailable () {
-      return this.vCode.length !== 4
-    },
-    template () {
-      return this.$route.query.template
-    },
-    inviter () {
-      return this.$route.query.inviter
+    btnNotAvailable () {
+      return this.code.length !== 4
     }
   },
+
   methods: {
+    _encodeParams (params) {
+      return Object.keys(params).map((key) => {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
+      }).join('&')
+    },
     clearMessage () {
-      this.messgae = ''
+      console.log('clearMessage')
+      this.message = ''
+    },
+    // 合法性检测之后调用 next
+    beforeSubmit (next, e) {
+      if (this.dcc === '0086' && !(/^1\d{10}$/).test(this.mobile)) {
+        this.message = '请输入正确的手机号'
+        return
+      }
+      if (this.dcc !== '0086' && !(/^\d+/).test(this.mobile)) {
+        this.message = '请输入正确的手机号'
+        return
+      }
+      next()
+    },
+    onCountrySelectorChange () {
+      console.log(this.dcc)
+    },
+    onSendCode () {
+      const that = this
+      send(`${store.baseUrl}/wz/account/mobile/check`, {
+        params: {
+          dcc: that.dcc,
+          mobile: that.mobile
+        }
+      })
+        .then(response => {
+          console.log(response)
+        })
     }
   },
+
   components: {
     TopBanner,
     FormHeaderStep1,
     FormFooter,
     Popup
   },
+
+  mounted () {
+    send(`${store.baseUrl}/wz/tool/dict/country_code`)
+      .then(response => {
+        this.countryArr = Object.values(response)
+      })
+  },
+
   updated () {
-    console.log(this.template)
+    console.log('mobile: ', this.mobile, 'dcc: ', this.dcc, 'code: ', this.code)
   }
 }
 </script>
 
 <style lang="less" scoped>
 @import "../style/fn.less";
+
 .container{
   padding: .1rem 0.24rem;
   .form-header{
@@ -137,6 +201,9 @@ export default {
       border-radius:4px;
       color:#fff;
       font-size:.17rem;
+    }
+    .step1-submit[disabled]{
+      opacity: .3;
     }
     .block{
       width: 100%;
