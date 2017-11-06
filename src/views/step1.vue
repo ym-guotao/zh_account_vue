@@ -90,11 +90,12 @@ import {send} from '@/lib/http'
 import store from '@/store'
 import getQuery from '@/mixins/getQuery'
 import encodeParams from '@/mixins/encodeParams'
+import wechat from '@/mixins/wechat'
 
 export default {
   name: 'step1',
 
-  mixins: [getQuery, encodeParams],
+  mixins: [getQuery, encodeParams, wechat],
 
   data () {
     return {

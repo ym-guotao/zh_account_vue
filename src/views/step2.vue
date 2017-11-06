@@ -106,6 +106,7 @@
 <script>
 import getQuery from '@/mixins/getQuery'
 import encodeParams from '@/mixins/encodeParams'
+import wechat from '@/mixins/wechat'
 import {send} from '@/lib/http'
 import store from '@/store'
 import TopBanner from '@/components/TopBanner'
@@ -116,7 +117,7 @@ import Popup from '@/components/Popup'
 export default {
   name: 'step2',
 
-  mixins: [getQuery, encodeParams],
+  mixins: [getQuery, encodeParams, wechat],
 
   data () {
     return {
