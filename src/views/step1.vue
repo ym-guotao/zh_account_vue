@@ -56,7 +56,7 @@
             </em>
             <!-- @clearTimer="() => {this.showTimer = false}" -->
             <Timer 
-              :seconds="3"
+              :seconds="30"
               @clearTimer="clearTimer"
               v-if="this.showTimer"
             />
@@ -150,7 +150,6 @@ export default {
     },
 
     onSendCode () {
-      console.log(this)
       send(`${store.baseUrl}/wz/account/mobile/check`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
