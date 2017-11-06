@@ -2,12 +2,7 @@
   <div class="step1">
     <TopBanner
       :template="template"
-      :inviter="{
-        name: 'test', 
-        company: 'company', 
-        position: 'position', 
-        avatar: '../assets/banner_haike_card.jpg'
-      }"
+      :inviter="inviter"
     />
     <div class="container">
       <h4 class="form-header"> 
@@ -59,15 +54,15 @@
             >
               发送验证码
             </em>
+            <!-- @clearTimer="() => {this.showTimer = false}" -->
             <Timer 
-              :seconds="30"
+              :seconds="3"
               @clearTimer="clearTimer"
               v-if="this.showTimer"
             />
           </span>
         </div>
         <button 
-          type="submit" 
           class="block step1-submit button"
           :disabled="btnNotAvailable"
           @click="(event) => onSubmit(event)"
@@ -94,11 +89,12 @@ import Timer from '@/components/Timer'
 import {send} from '@/lib/http'
 import store from '@/store'
 import getQuery from '@/mixins/getQuery'
+import encodeParams from '@/mixins/encodeParams'
 
 export default {
   name: 'step1',
 
-  mixins: [getQuery],
+  mixins: [getQuery, encodeParams],
 
   data () {
     return {
@@ -123,12 +119,6 @@ export default {
   },
 
   methods: {
-    _encodeParams (params) {
-      return Object.keys(params).map((key) => {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
-      }).join('&')
-    },
-
     onMobileChange () {
       sessionStorage.setItem('mobile', this.mobile)
     },
@@ -159,10 +149,11 @@ export default {
     },
 
     onSendCode () {
+      console.log(this)
       send(`${store.baseUrl}/wz/account/mobile/check`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: this._encodeParams({
+        body: this.encodeParams({
           dcc: this.dcc,
           mobile: this.mobile
         })
@@ -174,22 +165,23 @@ export default {
 
     onSubmit (event) {
       event.preventDefault()
+      sessionStorage.setItem('dcc', this.dcc)
       send(`${store.baseUrl}/wz/account/submit`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: this._encodeParams({
+        body: this.encodeParams({
           dcc: this.dcc,
           mobile: this.mobile,
           code: this.code
         })
       })
         .then(response => {
-          const {code, message, data} = response
+          const {code, msg, data} = response
           if (code < 0) {
-            this.message = message
+            this.message = msg
+            return
           }
           if (code === 1) {
-            console.log(this.redir)
             if (this.redir) {
               let tmp = decodeURIComponent(this.redir)
               tmp = /\?/.test(tmp) ? tmp + '&' : tmp + '?'
@@ -206,6 +198,7 @@ export default {
               default:
                 window.location.href = 'http://test.m.zhisland.com/wz/app/download'
             }
+            return
           }
           // 成功 (code === 0)后跳转路由
           const query = this.$route.query
@@ -226,6 +219,7 @@ export default {
   },
 
   mounted () {
+    // 获取国家码
     send(`${store.baseUrl}/wz/tool/dict/country_code`)
       .then(response => {
         this.countryArr = Object.values(response)

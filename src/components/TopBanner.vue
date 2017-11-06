@@ -41,7 +41,7 @@ export default {
     template: String,
     inviter: {
       type: Object,
-      default: {}
+      default: () => { return {} }
     },
     hasnotDefault: {
       type: Boolean,

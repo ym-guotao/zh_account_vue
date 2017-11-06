@@ -15,20 +15,27 @@ export default {
       timerSeconds: this.seconds
     }
   },
+  // methods: {
+  //   testScroll () {
+  //     console.log('scrolling...')
+  //   }
+  // },
   watch: {
     timerSeconds (newVal, oldVal) {
       newVal < 1 && this.$emit('clearTimer')
     }
   },
   mounted () {
+    // window.addEventListener('scroll', this.testScroll)
     if (this.timerSeconds > 0) {
-      this.clock = setInterval(() => {
+      this.codeClock = setInterval(() => {
         this.timerSeconds = this.timerSeconds - 1
       }, 1000)
     }
   },
   destroyed () {
-    clearInterval(this.clock)
+    // window.removeEventListener('scroll', this.testScroll)
+    clearInterval(this.codeClock)
   }
 }
 </script>
