@@ -25,6 +25,9 @@ npm run e2e
 
 # run all tests
 npm test
+
+# 在不同环境build的时 加入对应的真实api服务url
+VUE_APP_SERVER_URL=your://api.project.url cnpm run build
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
