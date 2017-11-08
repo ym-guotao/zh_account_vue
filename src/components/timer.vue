@@ -5,6 +5,7 @@
 </template>
 
 <script>
+// 请所有组件文件大写开头
 export default {
   name: 'timer',
   props: {
