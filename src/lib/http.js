@@ -64,9 +64,10 @@ instance.lock = function () {
 // simple fetch interceptor
 const send = (url, options) => {
   Indicator.open()
+  const optionsWithCookie = Object.assign({}, options, {credentials: true})
   return Promise.resolve({
     then: (onFulfill, onReject) => {
-      fetch(url, options)
+      fetch(url, optionsWithCookie)
         .then(response => {
           if (response.status !== 200) {
             throw new Error('Fail to get response with status ' + response.status)
