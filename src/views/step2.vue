@@ -107,7 +107,8 @@
 import getQuery from '@/mixins/getQuery'
 import encodeParams from '@/mixins/encodeParams'
 import wechat from '@/mixins/wechat'
-import {send} from '@/lib/http'
+// import {send} from '@/lib/http'
+import http from '@/lib/http'
 import store from '@/store'
 import TopBanner from '@/components/TopBanner'
 import FormFooter from '@/components/FormFooter'
@@ -139,10 +140,11 @@ export default {
   methods: {
     onSubmit (event) {
       event.preventDefault()
-      send(`${store.baseUrl}/wz/account/save/baseinfo`, {
+      http.lock()({
+        url: `${store.baseUrl}/wz/account/save/baseinfo`,
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: this.encodeParams({
+        data: this.encodeParams({
           dcc: sessionStorage.getItem('dcc'),
           mobile: sessionStorage.getItem('mobile'),
           uname: this.uname,
@@ -154,13 +156,13 @@ export default {
         })
       })
         .then(response => {
-          switch (response.code) {
+          switch (response.data.code) {
             case 0:
               // 如果有 redir 直接跳转
               if (this.redir) {
                 let tmp = decodeURIComponent(this.redir)
                 tmp = /\?/.test(tmp) ? tmp + '&' : tmp + '?'
-                window.location.href = tmp + response.data
+                window.location.href = tmp + response.data.data
                 return
               }
               // 否则根据环境进行跳转
@@ -176,7 +178,7 @@ export default {
               }
               break
             default:
-              this.message = response.msg
+              this.message = response.data.msg
           }
         })
     }

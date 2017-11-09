@@ -22,7 +22,7 @@
               :key="country.key" 
               :value="country.value"
             >
-              {{country.value2}}&nbsp;&nbsp;&nbsp;+{{country.value.slice(2)}}
+              {{country.value2}}&nbsp;&nbsp;&nbsp;+{{country.value && country.value.slice(2)}}
             </option>
           </select>
         </div>
@@ -84,7 +84,8 @@ import FormHeaderStep1 from '@/components/FormHeaderStep1'
 import FormFooter from '@/components/FormFooter'
 import Popup from '@/components/Popup'
 import Timer from '@/components/Timer'
-import {send} from '@/lib/http'
+// import {send} from '@/lib/http'
+import http from '@/lib/http'
 import store from '@/store'
 import getQuery from '@/mixins/getQuery'
 import encodeParams from '@/mixins/encodeParams'
@@ -173,10 +174,11 @@ export default {
     },
 
     onSendCode () {
-      send(`${store.baseUrl}/wz/account/mobile/check`, {
+      http.lock()({
+        url: `${store.baseUrl}/wz/account/mobile/check`,
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: this.encodeParams({
+        data: this.encodeParams({
           dcc: this.dcc,
           mobile: this.mobile
         })
@@ -189,17 +191,18 @@ export default {
     onSubmit (event) {
       event.preventDefault()
       sessionStorage.setItem('dcc', this.dcc)
-      send(`${store.baseUrl}/wz/account/submit`, {
+      http.lock()({
+        url: `${store.baseUrl}/wz/account/submit`,
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: this.encodeParams({
+        data: this.encodeParams({
           dcc: this.dcc,
           mobile: this.mobile,
           code: this.code
         })
       })
         .then(response => {
-          const {code, msg, data} = response
+          const {code, msg, data} = response.data
           if (code < 0) {
             this.message = msg
             return
@@ -243,9 +246,9 @@ export default {
 
   mounted () {
     // 获取国家码
-    send(`${store.baseUrl}/wz/tool/dict/country_code`)
+    http.lock().get(`${store.baseUrl}/wz/tool/dict/country_code`)
       .then(response => {
-        this.countryArr = Object.values(response)
+        this.countryArr = Object.values(response.data)
       })
     // 设置sessionStorage
     this._getFromStorage('dcc')
