@@ -22,7 +22,7 @@
               :key="country.key" 
               :value="country.value"
             >
-              {{country.value2}}
+              {{country.value2}}&nbsp;&nbsp;&nbsp;{{country.value.slice(2)}}
             </option>
           </select>
         </div>
