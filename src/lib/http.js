@@ -2,7 +2,9 @@ import axios from 'axios'
 import { Indicator } from 'mint-ui'
 
 // axios 通用配置
-let config = {}
+let config = {
+  withCredentials: true
+}
 if (process.env.NODE_ENV === 'development' && !process.env.VUE_APP_SERVER_URL) {
   // 请在此处添加您的应用的 API server url
   config.baseURL = 'http://test.m.zhisland.com'
