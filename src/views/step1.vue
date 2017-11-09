@@ -31,9 +31,8 @@
             type="number" 
             pattern="[0-9]*"  
             class="block input" 
-            placeholder="请输入手机号" 
+            placeholder="请输入手机号"
             v-model.trim="mobile"
-            @input="onMobileChange"
           />
         </div>
         <div class="input-wrapper form-item">
@@ -44,7 +43,6 @@
             class="block input" 
             placeholder="请输入4位验证码"
             v-model.trim="code"
-            @input="onCodeChange"
           />
           <span>
             <em 
@@ -99,9 +97,9 @@ export default {
 
   data () {
     return {
-      dcc: sessionStorage.getItem('dcc') || '0086',
-      mobile: sessionStorage.getItem('mobile') || '',
-      code: sessionStorage.getItem('code') || '',
+      dcc: '0086',
+      mobile: '',
+      code: '',
       disableSendCode: false,
       showTimer: false,
       vCode: '',
@@ -110,22 +108,47 @@ export default {
     }
   },
 
+  watch: {
+    code (n, o) {
+      if (n.length > 4) {
+        this.code = n.slice(0, 4)
+      }
+      sessionStorage.setItem('code', this.code)
+    },
+
+    mobile (n, o) {
+      if (this.dcc === '0086' && n.length > 11) {
+        this.mobile = n.slice(0, 11)
+      }
+      sessionStorage.setItem('mobile', this.mobile)
+    },
+
+    dcc (n) {
+      if (n === '0086' && this.mobile.length > 11) {
+        this.mobile = this.mobile.slice(0, 11)
+      }
+      sessionStorage.setItem('dcc', this.dcc)
+    }
+  },
+
   computed: {
     sendClass () {
       return this.disableSendCode ? 'send-v-code' : 'send-v-code green'
     },
+
     btnNotAvailable () {
+      if (this.dcc === '0086') {
+        return this.code.length !== 4 || this.mobile.length !== 11
+      }
       return this.code.length !== 4
     }
   },
 
   methods: {
-    onMobileChange () {
-      sessionStorage.setItem('mobile', this.mobile)
-    },
-
-    onCodeChange () {
-      sessionStorage.setItem('code', this.code)
+    _getFromStorage (key) {
+      if (sessionStorage.getItem(key)) {
+        this[key] = sessionStorage.getItem(key)
+      }
     },
 
     clearMessage () {
@@ -224,6 +247,10 @@ export default {
       .then(response => {
         this.countryArr = Object.values(response)
       })
+    // 设置sessionStorage
+    this._getFromStorage('dcc')
+    this._getFromStorage('mobile')
+    this._getFromStorage('code')
   }
 }
 </script>
