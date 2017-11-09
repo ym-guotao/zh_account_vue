@@ -121,6 +121,9 @@ export default {
       if (this.dcc === '0086' && n.length > 11) {
         this.mobile = n.slice(0, 11)
       }
+      if (n.length > 20) {
+        this.mobile = n.slice(0, 20)
+      }
       sessionStorage.setItem('mobile', this.mobile)
     },
 
