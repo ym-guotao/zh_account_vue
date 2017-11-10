@@ -66,7 +66,7 @@ instance.lock = function () {
 // simple fetch interceptor
 const send = (url, options) => {
   Indicator.open()
-  const optionsWithCookie = Object.assign({}, options, {credentials: true})
+  const optionsWithCookie = Object.assign({}, options, {credentials: 'include'})
   return Promise.resolve({
     then: (onFulfill, onReject) => {
       fetch(url, optionsWithCookie)
