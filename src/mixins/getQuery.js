@@ -32,7 +32,7 @@ export default {
   },
 
   mounted () {
-    if (this.inviter) {
+    if (this.inviterId) {
       send(`${store.baseUrl}/wz/account/userinfo?inviter=${this.inviterId}`)
         .then(response => {
           this.inviter = response
